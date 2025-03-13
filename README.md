@@ -409,6 +409,37 @@ Then you can use it in your MCP configuration:
 }
 ```
 
+## NPX Best Practices
+
+For optimal integration with MCP clients using NPX, this project follows these best practices:
+
+1. **Executable Entry Point**: The main file includes a shebang line (`#!/usr/bin/env node`) and is made executable during build.
+
+2. **Package Configuration**:
+   - `"type": "module"` - Ensures ES Modules are used
+   - `"bin"` field - Maps the command name to the entry point
+   - `"files"` field - Specifies which files to include when publishing
+   - `"prepare"` script - Ensures compilation happens on install
+
+3. **TypeScript Configuration**:
+   - `"module": "NodeNext"` - Proper ES Modules support
+   - `"moduleResolution": "NodeNext"` - Consistent with ES Modules
+
+4. **Automatic Installation and Execution**:
+   - The MCP client configuration uses `npx -y` to automatically install and run the package
+   - No terminal window is tied up as the process runs in the background
+
+5. **Publishing Process**:
+   ```bash
+   # Update version in package.json
+   npm version patch  # or minor/major as appropriate
+   
+   # Build and publish
+   npm publish
+   ```
+
+These practices ensure the MCP server can be started automatically by the MCP client without requiring a separate terminal window, improving user experience and operational efficiency.
+
 ## Troubleshooting
 
 ### Cross-Platform Issues

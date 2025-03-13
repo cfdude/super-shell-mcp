@@ -7,8 +7,12 @@
   "bin": {
     "super-shell-mcp": "./build/index.js"
   },
+  "files": [
+    "build"
+  ],
   "scripts": {
-    "build": "tsc && node scripts/make-executable.js",
+    "build": "tsc && chmod +x build/index.js",
+    "prepare": "npm run build",
     "start": "node build/index.js",
     "dev": "ts-node --esm src/index.ts",
     "test": "jest --config=jest.config.cjs",
