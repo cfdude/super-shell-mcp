@@ -2,7 +2,7 @@
   "name": "super-shell-mcp",
   "version": "2.0.11",
   "description": "MCP server for executing shell commands across multiple platforms",
-  "type": "commonjs",
+  "type": "module",
   "main": "build/index.js",
   "bin": {
     "super-shell-mcp": "./build/index.js"

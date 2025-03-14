@@ -13,8 +13,14 @@ import * as fs from 'fs';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { CommandService, CommandSecurityLevel } from './services/command-service.js';
 import { getLogger, Logger } from './utils/logger.js';
+
+// In ESM, __dirname is not available directly, so we create it
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const execFileAsync = promisify(execFile);
 // Initialize the logger
