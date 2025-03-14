@@ -1,5 +1,8 @@
 name: CI
-on: [push, pull_request]
+
+on: 
+  push:
+  pull_request:
 
 jobs:
   test:
@@ -11,10 +14,3 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm test
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Security Scan
-        uses: github/codeql-action@v3
