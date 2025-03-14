@@ -1,0 +1,5 @@
+# .github/workflows/checks.yml
+- name: Run Linter
+  run: npx eslint .
+- name: Build Verification
+  run: npm run build
