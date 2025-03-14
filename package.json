@@ -1,11 +1,15 @@
 {
   "name": "super-shell-mcp",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "description": "MCP server for executing shell commands across multiple platforms",
   "type": "module",
   "main": "build/index.js",
   "bin": {
     "super-shell-mcp": "./build/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cfdude/super-shell-mcp.git"
   },
   "files": [
     "build"
