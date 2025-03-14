@@ -485,6 +485,8 @@ The server includes a comprehensive logging system that writes logs to a file fo
 
 1. **Log File Location**
    - Default: `logs/super-shell-mcp.log` in the server's directory
+   - The logs directory is created automatically and tracked by Git (with a .gitkeep file)
+   - Log files themselves are excluded from Git via .gitignore
    - Contains detailed information about server operations, command execution, and approval workflow
 
 2. **Log Levels**

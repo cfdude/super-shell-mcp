@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.0.10] - 2025-03-14
+
+### Added
+- Added logs directory with .gitkeep file to ensure logs directory is tracked by Git
+- Enhanced error handling for command approval process
+- Improved logging for command execution and approval workflow
+
+### Fixed
+- Fixed version inconsistencies across package.json, package-lock.json, and src/index.ts
+- Improved documentation for logging system
+- Enhanced cross-platform compatibility for log file paths
+
+## [2.0.9] - 2025-03-14
+
+### Added
+- Added additional logging for command approval workflow
+- Improved error handling for command execution
+- Enhanced debugging capabilities with more detailed logs
+
+### Fixed
+- Fixed minor issues with command approval workflow
+- Improved reliability of command execution across platforms
+- Enhanced error messages for better troubleshooting
 
 ## [2.0.8] - 2025-03-13
 
