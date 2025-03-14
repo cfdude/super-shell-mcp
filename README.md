@@ -112,6 +112,20 @@ You can optionally specify a custom shell by adding a shell parameter:
   "disabled": false
 }
 ```
+Windows 11 example
+```json
+"super-shell": {
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
+        "-y",
+        "super-shell-mcp",
+        "C:\\Users\\username"
+      ],
+      "alwaysAllow": [],
+      "disabled": false
+    }
+```
 
 #### Claude Desktop Configuration
 
