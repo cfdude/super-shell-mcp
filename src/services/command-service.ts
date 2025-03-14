@@ -287,7 +287,63 @@ export class CommandService extends EventEmitter {
       
       // Emit event for pending command
       this.emit('command:pending', pendingCommand);
+      
+      // Set a timeout to check if the command is still pending after a while
+      // This helps detect if the UI approval didn't properly trigger the approveCommand method
+      setTimeout(() => {
+        // If the command is still pending after the timeout
+        if (this.pendingCommands.has(id)) {
+          // Emit a warning event that can be handled by the client
+          this.emit('command:approval_timeout', {
+            commandId: id,
+            message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
+          });
+        }
+      }, 5000); // 5 second timeout to detect UI approval issues
     });
+  }
+
+  /**
+   * Queue a command for approval without waiting for the Promise to resolve
+   * @param command The command to queue
+   * @param args Command arguments
+   * @param requestedBy Who requested the command
+   * @returns The ID of the queued command
+   */
+  public queueCommandForApprovalNonBlocking(
+    command: string,
+    args: string[] = [],
+    requestedBy?: string
+  ): string {
+    const id = randomUUID();
+    const pendingCommand: PendingCommand = {
+      id,
+      command,
+      args,
+      requestedAt: new Date(),
+      requestedBy,
+      resolve: () => {}, // No-op resolve function
+      reject: () => {}   // No-op reject function
+    };
+
+    this.pendingCommands.set(id, pendingCommand);
+    
+    // Emit event for pending command
+    this.emit('command:pending', pendingCommand);
+    
+    // Set a timeout to check if the command is still pending after a while
+    setTimeout(() => {
+      // If the command is still pending after the timeout
+      if (this.pendingCommands.has(id)) {
+        // Emit a warning event that can be handled by the client
+        this.emit('command:approval_timeout', {
+          commandId: id,
+          message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
+        });
+      }
+    }, 5000); // 5 second timeout to detect UI approval issues
+    
+    return id;
   }
 
   /**

@@ -24,3 +24,6 @@ dist/
 *.swp
 *.swo
 .DS_Store
+
+# Logs
+logs/*.log

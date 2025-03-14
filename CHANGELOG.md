@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.8] - 2025-03-13
+
+### Added
+- Added comprehensive logging system with file-based logs
+- Implemented non-blocking command approval workflow
+- Added new `queueCommandForApprovalNonBlocking` method to CommandService
+
+### Fixed
+- Fixed timeout issue with commands requiring approval by implementing non-blocking approval workflow
+- Improved user experience by providing immediate feedback for commands requiring approval
+- Enhanced error handling for commands requiring approval
+- Fixed issue where pending commands would cause client timeouts
+
+## [2.0.7] - 2025-03-13
+
+### Fixed
+- Fixed timeout issue when using the "Approve" button in Roo Code client
+- Improved error handling in `handleApproveCommand` method to bypass Promise resolution mechanism
+- Added detailed logging for command approval process to aid debugging
+- Enhanced direct command execution in approval workflow to prevent timeouts
+- Fixed TypeScript errors related to error handling in command execution
+
+## [2.0.6] - 2025-03-13
+
+### Fixed
+- Fixed command approval workflow to prevent timeout errors
+- Added immediate detection of commands requiring approval
+- Improved error messages for commands requiring approval with clear instructions
+- Added direct guidance to use get_pending_commands and approve_command functions
+
+## [2.0.5] - 2025-03-13
+
+### Added
+- Improved command approval workflow with timeout detection
+- Added guidance for AI assistants when command approval times out
+- Enhanced error messages for commands requiring approval
+
+### Fixed
+- Module compatibility issues between ES Modules and CommonJS in tests
+- Updated TypeScript configuration to use CommonJS module system for better test compatibility
+- Removed unnecessary CommonJS compatibility code from source files
+- Changed package.json "type" from "module" to "commonjs" for consistent module system
+
+## [2.0.4] - 2025-03-13
+
+### Fixed
+- Module compatibility issues between ES Modules and CommonJS in tests
+- Updated TypeScript configuration to use CommonJS module system for better test compatibility
+- Removed unnecessary CommonJS compatibility code from source files
+- Changed package.json "type" from "module" to "commonjs" for consistent module system
+
 ## [2.0.3] - 2025-03-12
 
 ### Added

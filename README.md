@@ -15,7 +15,8 @@ An MCP (Model Context Protocol) server for executing shell commands across multi
   - **Requires Approval**: Commands that need explicit approval before execution
   - **Forbidden**: Commands that are explicitly blocked
 - Platform-specific command whitelists
-- Approval workflow for potentially dangerous commands
+- Non-blocking approval workflow for potentially dangerous commands
+- Comprehensive logging system with file-based logs
 - Comprehensive command management tools
 - Platform information tool for diagnostics
 
@@ -477,6 +478,35 @@ These practices ensure the MCP server can be started automatically by the MCP cl
 2. **Command Execution Timeout**
    - **Issue**: Commands taking too long and timing out
    - **Solution**: Increase the timeout value in the command service constructor
+
+### Logging System
+
+The server includes a comprehensive logging system that writes logs to a file for easier debugging and monitoring:
+
+1. **Log File Location**
+   - Default: `logs/super-shell-mcp.log` in the server's directory
+   - Contains detailed information about server operations, command execution, and approval workflow
+
+2. **Log Levels**
+   - **INFO**: General operational information
+   - **DEBUG**: Detailed debugging information
+   - **ERROR**: Error conditions and exceptions
+
+3. **Viewing Logs**
+   - Use standard file viewing commands to check logs:
+     ```bash
+     # View the entire log
+     cat logs/super-shell-mcp.log
+     
+     # Follow log updates in real-time
+     tail -f logs/super-shell-mcp.log
+     ```
+
+4. **Log Content**
+   - Server startup and configuration
+   - Command execution requests and results
+   - Approval workflow events (pending, approved, denied)
+   - Error conditions and troubleshooting information
 
 3. **Whitelist Management**
    - **Issue**: Need to add custom commands to whitelist

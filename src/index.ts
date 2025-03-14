@@ -8,7 +8,20 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
+import * as path from 'path';
+import * as fs from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import { randomUUID } from 'crypto';
 import { CommandService, CommandSecurityLevel } from './services/command-service.js';
+import { getLogger, Logger } from './utils/logger.js';
+
+const execFileAsync = promisify(execFile);
+// Initialize the logger
+// Use __dirname to get the directory of the current file
+const LOG_FILE = path.join(__dirname, '../logs/super-shell-mcp.log');
+console.error(`Log file path: ${LOG_FILE}`);
+const logger = getLogger(LOG_FILE, true);
 
 /**
  * SuperShellMcpServer - MCP server for executing shell commands across multiple platforms
@@ -27,7 +40,7 @@ class SuperShellMcpServer {
     this.server = new Server(
       {
         name: 'super-shell-mcp',
-        version: '2.0.2',
+        version: '2.0.8',
       },
       {
         capabilities: {
@@ -43,9 +56,16 @@ class SuperShellMcpServer {
     this.setupRequestHandlers();
     
     // Error handling
-    this.server.onerror = (error) => console.error('[MCP Error]', error);
+    this.server.onerror = (error) => {
+      logger.error(`[MCP Error] ${error}`);
+      console.error('[MCP Error]', error);
+    };
+    
     process.on('SIGINT', async () => {
+      logger.info('Received SIGINT signal, shutting down');
       await this.server.close();
+      logger.info('Server closed, exiting process');
+      logger.close();
       process.exit(0);
     });
   }
@@ -55,6 +75,7 @@ class SuperShellMcpServer {
    */
   private setupCommandServiceEvents(): void {
     this.commandService.on('command:pending', (pendingCommand) => {
+      logger.info(`[Pending Command] ID: ${pendingCommand.id}, Command: ${pendingCommand.command} ${pendingCommand.args.join(' ')}`);
       console.error(`[Pending Command] ID: ${pendingCommand.id}, Command: ${pendingCommand.command} ${pendingCommand.args.join(' ')}`);
       this.pendingApprovals.set(pendingCommand.id, {
         command: pendingCommand.command,
@@ -63,18 +84,29 @@ class SuperShellMcpServer {
     });
 
     this.commandService.on('command:approved', (data) => {
+      logger.info(`[Approved Command] ID: ${data.commandId}`);
       console.error(`[Approved Command] ID: ${data.commandId}`);
       this.pendingApprovals.delete(data.commandId);
     });
 
     this.commandService.on('command:denied', (data) => {
+      logger.info(`[Denied Command] ID: ${data.commandId}, Reason: ${data.reason}`);
       console.error(`[Denied Command] ID: ${data.commandId}, Reason: ${data.reason}`);
       this.pendingApprovals.delete(data.commandId);
     });
 
     this.commandService.on('command:failed', (data) => {
+      logger.error(`[Failed Command] ID: ${data.commandId}, Error: ${data.error.message}`);
       console.error(`[Failed Command] ID: ${data.commandId}, Error: ${data.error.message}`);
       this.pendingApprovals.delete(data.commandId);
+    });
+    
+    // Handle approval timeout events
+    this.commandService.on('command:approval_timeout', (data) => {
+      logger.error(`[Approval Timeout] ID: ${data.commandId}, Message: ${data.message}`);
+      console.error(`[Approval Timeout] ID: ${data.commandId}, Message: ${data.message}`);
+      // Log the timeout but keep the command in the pending queue
+      // The AI assistant will need to use get_pending_commands and approve_command to proceed
     });
   }
 
@@ -285,9 +317,51 @@ class SuperShellMcpServer {
       args: z.array(z.string()).optional(),
     });
 
+    // Log the start of command execution
+    logger.debug(`handleExecuteCommand called with args: ${JSON.stringify(args)}`);
+
     const { command, args: commandArgs = [] } = schema.parse(args);
 
+    // Extract the base command (without path)
+    const baseCommand = path.basename(command);
+    
+    logger.debug(`[Executing Command] Command: ${command} ${commandArgs.join(' ')}`);
+    logger.debug(`Base command: ${baseCommand}`);
+    
+    // Check if the command requires approval before attempting execution
+    const whitelist = this.commandService.getWhitelist();
+    logger.debug(`Whitelist entries: ${whitelist.length}`);
+    
+    const whitelistEntry = whitelist.find(entry => entry.command === baseCommand);
+    logger.debug(`Whitelist entry found: ${whitelistEntry ? 'yes' : 'no'}`);
+    
+    if (whitelistEntry) {
+      logger.debug(`Security level: ${whitelistEntry.securityLevel}`);
+    }
+    
+    if (whitelistEntry && whitelistEntry.securityLevel === CommandSecurityLevel.REQUIRES_APPROVAL) {
+      logger.debug(`[Command Requires Approval] Command: ${command} ${commandArgs.join(' ')}`);
+      
+      // Use the non-blocking method to queue the command for approval
+      const commandId = this.commandService.queueCommandForApprovalNonBlocking(command, commandArgs);
+      logger.debug(`Command queued for approval with ID: ${commandId}`);
+      
+      // Return immediately with instructions for approval
+      logger.debug(`Returning response to client`);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `This command requires approval. It has been queued with ID: ${commandId}\n\nPlease approve this command in the UI or use the 'approve_command' function with this command ID.`,
+          },
+        ],
+        isError: false, // Not an error, just needs approval
+      };
+    }
+    
+    // For safe commands or forbidden commands, use the normal execution path
     try {
+      // Use the CommandService's executeCommand method
       const result = await this.commandService.executeCommand(command, commandArgs);
       
       return {
@@ -302,19 +376,22 @@ class SuperShellMcpServer {
           },
         ],
       };
-    } catch (error) {
-      if (error instanceof Error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Command execution failed: ${error.message}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-      throw error;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Unknown error occurred';
+      
+      console.error(`[Command Execution Failed] Error: ${errorMessage}`);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Command execution failed: ${errorMessage}`,
+          },
+        ],
+        isError: true,
+      };
     }
   }
 
@@ -478,10 +555,39 @@ class SuperShellMcpServer {
       commandId: z.string(),
     });
 
+    logger.debug(`handleApproveCommand called with args: ${JSON.stringify(args)}`);
+
     const { commandId } = schema.parse(args);
 
+    // Log the approval attempt
+    logger.debug(`[Approval Attempt] ID: ${commandId}`);
+
+    // Check if the command exists in our local pending approvals map
+    const localPending = this.pendingApprovals.has(commandId);
+    logger.debug(`Command found in local pendingApprovals: ${localPending ? 'yes' : 'no'}`);
+
+    // Check if the command exists in the CommandService's pending queue
+    const pendingCommands = this.commandService.getPendingCommands();
+    logger.debug(`CommandService pending commands: ${pendingCommands.length}`);
+    const pendingCommand = pendingCommands.find(cmd => cmd.id === commandId);
+    logger.debug(`Command found in CommandService pending queue: ${pendingCommand ? 'yes' : 'no'}`);
+    
+    if (pendingCommand) {
+      logger.debug(`Pending command details: ${JSON.stringify({
+        id: pendingCommand.id,
+        command: pendingCommand.command,
+        args: pendingCommand.args,
+        requestedAt: pendingCommand.requestedAt
+      })}`);
+    }
+
     try {
+      logger.debug(`Calling CommandService.approveCommand with ID: ${commandId}`);
+      // Use the CommandService's approveCommand method directly
       const result = await this.commandService.approveCommand(commandId);
+      
+      logger.debug(`[Command Approved] ID: ${commandId}, Output length: ${result.stdout.length}`);
+      logger.debug(`Command output: ${result.stdout.substring(0, 100)}${result.stdout.length > 100 ? '...' : ''}`);
       
       return {
         content: [
@@ -496,6 +602,8 @@ class SuperShellMcpServer {
         ],
       };
     } catch (error) {
+      logger.error(`[Approval Error] ID: ${commandId}, Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
       if (error instanceof Error) {
         return {
           content: [
@@ -520,10 +628,15 @@ class SuperShellMcpServer {
       reason: z.string().optional(),
     });
 
+    logger.debug(`handleDenyCommand called with args: ${JSON.stringify(args)}`);
+
     const { commandId, reason } = schema.parse(args);
+
+    logger.debug(`[Denial Attempt] ID: ${commandId}, Reason: ${reason || 'none provided'}`);
 
     try {
       this.commandService.denyCommand(commandId, reason);
+      logger.info(`Command denied: ID: ${commandId}, Reason: ${reason || 'none provided'}`);
       
       return {
         content: [
@@ -534,6 +647,8 @@ class SuperShellMcpServer {
         ],
       };
     } catch (error) {
+      logger.error(`[Denial Error] ID: ${commandId}, Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
       if (error instanceof Error) {
         return {
           content: [
@@ -553,9 +668,13 @@ class SuperShellMcpServer {
    * Run the MCP server
    */
   async run() {
+    logger.info('Starting Super Shell MCP server');
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
+    logger.info('Super Shell MCP server running on stdio');
     console.error('Super Shell MCP server running on stdio');
+    console.error(`Log file: ${LOG_FILE}`);
+    logger.info(`Log file: ${LOG_FILE}`);
   }
 }
 
