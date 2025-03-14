@@ -40,7 +40,7 @@ class SuperShellMcpServer {
     this.server = new Server(
       {
         name: 'super-shell-mcp',
-        version: '2.0.10',
+        version: '2.0.11',
       },
       {
         capabilities: {

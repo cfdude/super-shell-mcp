@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.0.11] - 2025-03-14
+
+### Added
+- Published package to npm at https://www.npmjs.com/package/super-shell-mcp
+- Updated README.md to highlight NPX installation method as the recommended approach
+- Added benefits of using NPX in documentation
+- Enhanced configuration examples for easier setup
+
+### Changed
+- Reorganized documentation to prioritize NPX installation method
+- Simplified GitHub installation instructions
+- Improved package publishing documentation
+
 ## [2.0.10] - 2025-03-14
 
 ### Added

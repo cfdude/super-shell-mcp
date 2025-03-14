@@ -52,9 +52,41 @@ node build/index.js
 
 Both Roo Code and Claude Desktop use a similar configuration format for MCP servers. Here's how to set up the Super Shell MCP server:
 
-#### Roo Code Configuration
+#### Option 1: Using NPX (Recommended)
 
-Add the following to your Roo Code MCP settings configuration file (located at `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`):
+The easiest way to use Super Shell MCP is with NPX, which automatically installs and runs the package from npm without requiring manual setup. The package is available on NPM at [https://www.npmjs.com/package/super-shell-mcp](https://www.npmjs.com/package/super-shell-mcp).
+
+##### Roo Code Configuration with NPX
+
+```json
+"super-shell": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "super-shell-mcp"
+  ],
+  "alwaysAllow": [],
+  "disabled": false
+}
+```
+
+##### Claude Desktop Configuration with NPX
+
+```json
+"super-shell": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "super-shell-mcp"
+  ],
+  "alwaysAllow": false,
+  "disabled": false
+}
+```
+
+#### Option 2: Using Local Installation
+
+If you prefer to use a local installation, add the following to your Roo Code MCP settings configuration file (located at `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`):
 
 ```json
 "super-shell": {
@@ -330,15 +362,24 @@ You can extend the whitelist by using the `add_to_whitelist` tool. For example:
 }
 ```
 
-## Using as an npm Package
+## NPM Package Information
 
-To use the Super Shell MCP server with `npx` similar to other MCP servers like Brave Search, you can publish it to npm or use it directly from GitHub.
+Super Shell MCP is available as an npm package at [https://www.npmjs.com/package/super-shell-mcp](https://www.npmjs.com/package/super-shell-mcp).
 
-### Configuration with npx
+### Benefits of Using NPX
 
-Add the following to your MCP settings configuration:
+Using the NPX method (as shown in Option 1 of the Configuration section) offers several advantages:
 
-#### Roo Code
+1. **No Manual Setup**: No need to clone the repository, install dependencies, or build the project
+2. **Automatic Updates**: Always uses the latest published version
+3. **Cross-Platform Compatibility**: Works the same way on Windows, macOS, and Linux
+4. **Simplified Configuration**: Shorter configuration with no absolute paths
+5. **Reduced Maintenance**: No local files to manage or update
+
+### Using from GitHub
+
+If you prefer to use the latest development version directly from GitHub:
+
 ```json
 "super-shell": {
   "command": "npx",
@@ -346,32 +387,17 @@ Add the following to your MCP settings configuration:
     "-y",
     "github:cfdude/super-shell-mcp"
   ],
-  "alwaysAllow": [],
+  "alwaysAllow": [],  // For Roo Code
   "disabled": false
 }
 ```
 
-#### Claude Desktop
-```json
-"super-shell": {
-  "command": "npx",
-  "args": [
-    "-y",
-    "github:cfdude/super-shell-mcp"
-  ],
-  "alwaysAllow": false,
-  "disabled": false
-}
-```
+### Publishing Your Own Version
 
-This will automatically download and run the server without requiring a manual clone and build process.
-
-### Publishing to npm
-
-If you want to publish your own version to npm:
+If you want to publish your own modified version to npm:
 
 1. Update the package.json with your details
-2. Add a "bin" field to package.json:
+2. Ensure the "bin" field is properly configured:
    ```json
    "bin": {
      "super-shell-mcp": "./build/index.js"
@@ -381,34 +407,6 @@ If you want to publish your own version to npm:
    ```bash
    npm publish
    ```
-
-Then you can use it in your MCP configuration:
-
-#### Roo Code
-```json
-"super-shell": {
-  "command": "npx",
-  "args": [
-    "-y",
-    "super-shell-mcp"
-  ],
-  "alwaysAllow": [],
-  "disabled": false
-}
-```
-
-#### Claude Desktop
-```json
-"super-shell": {
-  "command": "npx",
-  "args": [
-    "-y",
-    "super-shell-mcp"
-  ],
-  "alwaysAllow": false,
-  "disabled": false
-}
-```
 
 ## NPX Best Practices
 
