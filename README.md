@@ -1,4 +1,8 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/cfdude-super-shell-mcp-badge.png)](https://mseep.ai/app/cfdude-super-shell-mcp)
+
 # Super Shell MCP Server
+
+[![smithery badge](https://smithery.ai/badge/@cfdude/super-shell-mcp)](https://smithery.ai/package/@cfdude/super-shell-mcp)
 
 An MCP (Model Context Protocol) server for executing shell commands across multiple platforms (Windows, macOS, Linux). This server provides a secure way to execute shell commands with built-in whitelisting and approval mechanisms.
 
@@ -21,6 +25,16 @@ An MCP (Model Context Protocol) server for executing shell commands across multi
 - Platform information tool for diagnostics
 
 ## Installation
+
+### Installing via Smithery
+
+To install Super Shell MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/package/@cfdude/super-shell-mcp):
+
+```bash
+npx -y @smithery/cli install @cfdude/super-shell-mcp --client claude
+```
+
+### Installing Manually
 
 ```bash
 # Clone the repository
