@@ -1,5 +1,28 @@
-# .github/workflows/checks.yml
-- name: Run Linter
-  run: npx eslint .
-- name: Build Verification
-  run: npm run build
+name: Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run Linter
+      run: npx eslint .
+      
+    - name: Build Verification
+      run: npm run build
