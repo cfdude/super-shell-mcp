@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr create:*)",
+      "Bash(gh browse:*)"
+    ],
+    "deny": []
+  }
+}
