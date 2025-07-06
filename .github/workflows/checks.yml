@@ -22,7 +22,7 @@ jobs:
       run: npm ci
       
     - name: Run Linter
-      run: npx eslint .
+      run: npm run lint
       
     - name: Build Verification
       run: npm run build
