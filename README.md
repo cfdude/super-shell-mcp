@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/cfdude-super-shell-mcp-badge.png)](https://mseep.ai/app/cfdude-super-shell-mcp)
+
 # Super Shell MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@cfdude/super-shell-mcp)](https://smithery.ai/package/@cfdude/super-shell-mcp)
