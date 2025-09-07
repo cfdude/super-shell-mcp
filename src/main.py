@@ -11,19 +11,19 @@ from typing import Any, Dict, List, Optional
 # Docs pattern: from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp import FastMCP
 
-from src.utils.platform import (
+from utils.platform import (
     detect_platform,
     get_default_shell,
     get_shell_suggestions,
     get_common_shell_locations,
 )
-from src.services.command_service import (
+from services.command_service import (
     CommandService,
     CommandSecurityLevel,
     CommandWhitelistEntry,
     CommandResult,
 )
-from src.utils.logger import get_logger, Logger
+from utils.logger import get_logger, Logger
 
 
 # -----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ print(f"Log file path: {LOG_FILE}", file=os.sys.stderr)
 # -----------------------------------------------------------------------------
 # MCP App (Python)
 # -----------------------------------------------------------------------------
-mcp = FastMCP(name="super-shell-mcp", version="2.0.13")
+mcp = FastMCP(name="super-shell-mcp")
 
 # Command service with auto-detected shell (same behavior)
 command_service = CommandService()
@@ -135,19 +135,6 @@ async def get_platform_info() -> str:
 @mcp.tool(
     name="execute_command",
     description="Execute a shell command on the current platform",
-    args={
-        "command": {
-            "type": "string",
-            "description": "The command to execute",
-            "required": True,
-        },
-        "args": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Command arguments",
-            "required": False,
-        },
-    },
 )
 async def execute_command(command: str, args: Optional[List[str]] = None) -> str:
     args = args or []
@@ -216,15 +203,6 @@ async def get_whitelist() -> str:
 @mcp.tool(
     name="add_to_whitelist",
     description="Add a command to the whitelist",
-    args={
-        "command": {"type": "string", "required": True},
-        "securityLevel": {
-            "type": "string",
-            "enum": ["safe", "requires_approval", "forbidden"],
-            "required": True,
-        },
-        "description": {"type": "string", "required": False},
-    },
 )
 async def add_to_whitelist(command: str, securityLevel: str, description: Optional[str] = None) -> str:
     level = (
@@ -240,14 +218,6 @@ async def add_to_whitelist(command: str, securityLevel: str, description: Option
 @mcp.tool(
     name="update_security_level",
     description="Update the security level of a whitelisted command",
-    args={
-        "command": {"type": "string", "required": True},
-        "securityLevel": {
-            "type": "string",
-            "enum": ["safe", "requires_approval", "forbidden"],
-            "required": True,
-        },
-    },
 )
 async def update_security_level(command: str, securityLevel: str) -> str:
     level = (
@@ -262,7 +232,6 @@ async def update_security_level(command: str, securityLevel: str) -> str:
 @mcp.tool(
     name="remove_from_whitelist",
     description="Remove a command from the whitelist",
-    args={"command": {"type": "string", "required": True}},
 )
 async def remove_from_whitelist(command: str) -> str:
     command_service.remove_from_whitelist(command)
@@ -291,7 +260,6 @@ async def get_pending_commands() -> str:
 @mcp.tool(
     name="approve_command",
     description="Approve a pending command",
-    args={"commandId": {"type": "string", "required": True}},
 )
 async def approve_command(commandId: str) -> str:
     logger.debug(f"handleApproveCommand called with args: {json.dumps({'commandId': commandId})}")
@@ -327,10 +295,6 @@ async def approve_command(commandId: str) -> str:
 @mcp.tool(
     name="deny_command",
     description="Deny a pending command",
-    args={
-        "commandId": {"type": "string", "required": True},
-        "reason": {"type": "string", "required": False},
-    },
 )
 async def deny_command(commandId: str, reason: Optional[str] = None) -> str:
     logger.debug(f"handleDenyCommand called with args: {json.dumps({'commandId': commandId, 'reason': reason})}")
@@ -350,7 +314,7 @@ async def deny_command(commandId: str, reason: Optional[str] = None) -> str:
 # -----------------------------------------------------------------------------
 async def _run_stdio() -> None:
     logger.info("Starting Super Shell MCP server")
-    await mcp.run_stdio()  # FastMCP handles stdio transport internally
+    await mcp.run_stdio_async()  # <-- FIX: correct async method
     logger.info("Super Shell MCP server running on stdio")
     print("Super Shell MCP server running on stdio", file=os.sys.stderr)
     print(f"Log file: {LOG_FILE}", file=os.sys.stderr)
@@ -362,8 +326,10 @@ def main() -> None:
         asyncio.run(_run_stdio())
     except KeyboardInterrupt:
         logger.info("Received SIGINT signal, shutting down")
+    finally:
         logger.close()
 
 
 if __name__ == "__main__":
     main()
+
