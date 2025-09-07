@@ -1,33 +1,44 @@
-# Use Node.js 18 Alpine for smaller image size
-FROM node:18-alpine
+# Use a slim Python base image (similar size philosophy to node:alpine)
+FROM python:3.11-slim
 
-# Set working directory
+# Environment
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Create app directory
 WORKDIR /app
 
-# Create logs directory
+# System deps for shells (bash/zsh) + ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash zsh ca-certificates locales \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create logs directory like before
 RUN mkdir -p logs
 
-# Copy package files first for better caching
-COPY package*.json ./
+# Install runtime Python dependencies (MCP SDK etc.)
+# Add more here if your project needs them
+RUN pip install --no-cache-dir mcp
 
-# Copy TypeScript configuration and source code
-COPY tsconfig.json ./
-COPY src/ ./src/
+# Copy your Python source code
+COPY src ./src
+COPY examples ./examples 2>/dev/null || true
+COPY run.sh ./run.sh 2>/dev/null || true
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci
+# Make run.sh executable if you use it
+RUN [ -f run.sh ] && chmod +x run.sh || true
 
-# Build the project (compiles TypeScript and sets executable permissions)
-RUN npm run build
+# For dev/test builds
+FROM python:3.11-slim AS dev
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends bash zsh ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY your_pkg ./your_pkg
+COPY tests ./tests
+ENTRYPOINT ["pytest", "-q"]
 
-# Remove dev dependencies to reduce image size
-RUN npm prune --omit=dev && npm cache clean --force
-
-# Ensure the built file is executable
-RUN chmod +x build/index.js
-
-# Expose stdio for MCP communication
-# Note: MCP servers typically communicate via stdio, not network ports
-
-# Set the entrypoint to the built application
-ENTRYPOINT ["node", "build/index.js"]
+# Entrypoint: run MCP server on stdio
+ENTRYPOINT ["python", "-m", "main.py"]
