@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from typing import List
-from utils.platform import PlatformType, detect_platform
-from services.command_service import (
+from src.utils.platform import PlatformType, detect_platform
+from src.services.command_service import (
     CommandSecurityLevel,
     CommandWhitelistEntry,
 )

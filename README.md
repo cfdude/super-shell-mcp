@@ -36,7 +36,7 @@ pip install -r requirements.txt
 Or with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv run -m your_pkg
+uv run src/main.py
 ```
 
 ## ▶️ Usage
@@ -44,7 +44,7 @@ uv run -m your_pkg
 Start the server (stdio transport):
 
 ```bash
-python -m your_pkg
+python src/main.py
 ```
 
 Logs will be written to `logs/super-shell-mcp.log`.
@@ -56,7 +56,7 @@ Edit `claude_desktop_config.json`:
 ```json
 "super-shell-mcp": {
   "command": "python",
-  "args": ["-m", "your_pkg"],
+  "args": ["src/main.py"],
   "cwd": "/absolute/path/to/super-shell-mcp",
   "env": { "PYTHONUNBUFFERED": "1" },
   "alwaysAllow": false,
@@ -69,7 +69,7 @@ With **uv**:
 ```json
 "super-shell-mcp": {
   "command": "uv",
-  "args": ["run", "-m", "your_pkg"],
+  "args": ["run", "src/main.py"],
   "cwd": "/absolute/path/to/super-shell-mcp",
   "env": { "PYTHONUNBUFFERED": "1" },
   "alwaysAllow": false,

@@ -11,19 +11,19 @@ from typing import Any, Dict, List, Optional
 # Docs pattern: from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp import FastMCP
 
-from utils.platform import (
+from src.utils.platform import (
     detect_platform,
     get_default_shell,
     get_shell_suggestions,
     get_common_shell_locations,
 )
-from services.command_service import (
+from src.services.command_service import (
     CommandService,
     CommandSecurityLevel,
     CommandWhitelistEntry,
     CommandResult,
 )
-from utils.logger import get_logger, Logger
+from src.utils.logger import get_logger, Logger
 
 
 # -----------------------------------------------------------------------------

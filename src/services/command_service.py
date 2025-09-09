@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import shlex
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
-
-from utils.platform import get_default_shell, PlatformType, detect_platform
+from src.utils.platform import get_default_shell, PlatformType, detect_platform
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ class CommandService(EventEmitter):
 
     def _initialize_default_whitelist(self) -> None:
         # Late import to avoid circular dependency
-        from utils.command_whitelist import get_platform_specific_commands
+        from src.utils.command_whitelist import get_platform_specific_commands
 
         platform_commands = get_platform_specific_commands()
         for entry in platform_commands:
