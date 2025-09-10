@@ -7,7 +7,8 @@
       "Bash(docker run:*)",
       "mcp__super-shell__execute_command",
       "mcp__git__git_status",
-      "mcp__git__git_add"
+      "mcp__git__git_add",
+      "mcp__git__git_commit"
     ],
     "deny": []
   }
