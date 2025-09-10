@@ -5,11 +5,11 @@
   "type": "module",
   "main": "build/index.js",
   "bin": {
-    "super-shell-mcp": "./build/index.js"
+    "super-shell-mcp": "build/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cfdude/super-shell-mcp.git"
+    "url": "git+https://github.com/cfdude/super-shell-mcp.git"
   },
   "files": [
     "build"
