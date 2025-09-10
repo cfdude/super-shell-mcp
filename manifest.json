@@ -1,0 +1,54 @@
+{
+  "dxt_version": "0.1",
+  "name": "super-shell-mcp",
+  "version": "2.0.13",
+  "description": "Execute shell commands across multiple platforms with built-in security controls",
+  "long_description": "An MCP server for executing shell commands on Windows, macOS, and Linux with automatic platform detection, command whitelisting, and approval workflows for security.",
+  "author": {
+    "name": "cfdude",
+    "url": "https://github.com/cfdude/super-shell-mcp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cfdude/super-shell-mcp"
+  },
+  "license": "MIT",
+  "keywords": ["shell", "commands", "security", "cross-platform", "terminal"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "CUSTOM_SHELL": "${user_config.shell_path}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "execute_command",
+      "description": "Execute shell commands with security controls"
+    },
+    {
+      "name": "get_whitelist",
+      "description": "Get list of whitelisted commands"
+    },
+    {
+      "name": "add_to_whitelist",
+      "description": "Add commands to the security whitelist"
+    },
+    {
+      "name": "get_platform_info",
+      "description": "Get current platform and shell information"
+    }
+  ],
+  "user_config": {
+    "shell_path": {
+      "type": "string",
+      "title": "Custom Shell Path",
+      "description": "Optional: Specify a custom shell path (e.g., /bin/zsh, C:\\Windows\\System32\\cmd.exe)",
+      "required": false
+    }
+  }
+}

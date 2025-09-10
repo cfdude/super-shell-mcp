@@ -6,6 +6,8 @@
 
 An MCP (Model Context Protocol) server for executing shell commands across multiple platforms (Windows, macOS, Linux). This server provides a secure way to execute shell commands with built-in whitelisting and approval mechanisms.
 
+> 🎉 **Now available as a Claude Desktop Extension!** Install with one click using the `.dxt` package - no developer tools or configuration required.
+
 ## Features
 
 - Execute shell commands through MCP on Windows, macOS, and Linux
@@ -26,7 +28,32 @@ An MCP (Model Context Protocol) server for executing shell commands across multi
 
 ## Installation
 
-### Installing via Smithery
+### Option 1: Claude Desktop Extension (.dxt) - Recommended
+
+**One-Click Installation for Claude Desktop:**
+
+1. **Download** the `super-shell-mcp.dxt` file from the [latest release](https://github.com/cfdude/super-shell-mcp/releases)
+2. **Quick Install**: Double-click the `.dxt` file while Claude Desktop is open
+   
+   **OR**
+   
+   **Manual Install**: 
+   - Open Claude Desktop
+   - Go to **Settings** > **Extensions**
+   - Click **"Add Extension"**
+   - Select the downloaded `super-shell-mcp.dxt` file
+
+3. **Configure** (optional): Set custom shell path if needed
+4. **Start using** - The extension is ready to use immediately!
+
+✅ **Benefits of DXT Installation:**
+- No developer tools required (Node.js, Python, etc.)
+- No manual configuration files
+- Automatic dependency management
+- One-click installation and updates
+- Secure credential storage in OS keychain
+
+### Option 2: Installing via Smithery
 
 To install Super Shell MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/package/@cfdude/super-shell-mcp):
 
@@ -34,7 +61,7 @@ To install Super Shell MCP Server for Claude Desktop automatically via [Smithery
 npx -y @smithery/cli install @cfdude/super-shell-mcp --client claude
 ```
 
-### Installing Manually
+### Option 3: Installing Manually
 
 ```bash
 # Clone the repository
@@ -50,7 +77,20 @@ npm run build
 
 ## Usage
 
-### Starting the Server
+### For Claude Desktop Extension Users (.dxt)
+
+If you installed using the `.dxt` extension (Option 1), **you're ready to go!** No additional configuration needed. The extension handles everything automatically:
+
+- ✅ **Automatic startup** when Claude Desktop launches
+- ✅ **Platform detection** and appropriate shell selection  
+- ✅ **Built-in security** with command whitelisting and approval workflows
+- ✅ **Optional configuration** via Claude Desktop's extension settings
+
+### For Manual Installation Users
+
+If you installed manually (Option 2 or 3), you'll need to configure Claude Desktop or your MCP client:
+
+#### Starting the Server Manually
 
 ```bash
 npm start
@@ -62,11 +102,11 @@ Or directly:
 node build/index.js
 ```
 
-### Configuring in Roo Code and Claude Desktop
+#### Manual Configuration for MCP Clients
 
-Both Roo Code and Claude Desktop use a similar configuration format for MCP servers. Here's how to set up the Super Shell MCP server:
+For manual installations, both Roo Code and Claude Desktop use a similar configuration format for MCP servers:
 
-#### Option 1: Using NPX (Recommended)
+##### Using NPX (Recommended for Manual Setup)
 
 The easiest way to use Super Shell MCP is with NPX, which automatically installs and runs the package from npm without requiring manual setup. The package is available on NPM at [https://www.npmjs.com/package/super-shell-mcp](https://www.npmjs.com/package/super-shell-mcp).
 
