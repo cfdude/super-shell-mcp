@@ -101,17 +101,22 @@ const getShellConfigurationHelp = () => {
 
 // Mock the CommandService class
 class CommandService extends EventEmitter {
-  constructor(shell, defaultTimeout = 30000) {
+  constructor(options = {}) {
     super();
-    this.shell = shell || getDefaultShell();
+    this.shell = options.shell || getDefaultShell();
+    this.useShell = options.useShell ?? false;
     this.whitelist = new Map();
     this.pendingCommands = new Map();
-    this.defaultTimeout = defaultTimeout;
+    this.defaultTimeout = options.defaultTimeout ?? 30000;
     this.initializeDefaultWhitelist();
   }
 
   getShell() {
     return this.shell;
+  }
+
+  isShellEnabled() {
+    return this.useShell;
   }
 
   initializeDefaultWhitelist() {
@@ -233,7 +238,7 @@ class CommandService extends EventEmitter {
       const execFileAsync = promisify(execFile);
       const { stdout, stderr } = await execFileAsync(command, args, {
         timeout,
-        shell: this.shell
+        shell: this.useShell ? this.shell : false
       });
       
       return { stdout, stderr };
@@ -310,7 +315,7 @@ class CommandService extends EventEmitter {
       const { stdout, stderr } = await execFileAsync(
         pendingCommand.command,
         pendingCommand.args,
-        { shell: this.shell }
+        { shell: this.useShell ? this.shell : false }
       );
       
       this.pendingCommands.delete(commandId);

@@ -32,21 +32,36 @@ const logger = getLogger(LOG_FILE, true);
 /**
  * SuperShellMcpServer - MCP server for executing shell commands across multiple platforms
  */
+interface CommandExecutionOptions {
+  shell?: string;
+  useShell?: boolean;
+  defaultTimeout?: number;
+}
+
+interface SuperShellMcpServerOptions {
+  shell?: string;
+  commandExecution?: CommandExecutionOptions;
+}
+
 class SuperShellMcpServer {
   private server: Server;
   private commandService: CommandService;
   private pendingApprovals: Map<string, { command: string; args: string[] }>;
 
-  constructor(options?: { shell?: string }) {
+  constructor(options?: SuperShellMcpServerOptions) {
     // Initialize the command service with auto-detected or specified shell
-    this.commandService = new CommandService(options?.shell);
+    this.commandService = new CommandService({
+      shell: options?.commandExecution?.shell ?? options?.shell,
+      useShell: options?.commandExecution?.useShell,
+      defaultTimeout: options?.commandExecution?.defaultTimeout,
+    });
     this.pendingApprovals = new Map();
 
     // Initialize the MCP server
     this.server = new Server(
       {
         name: 'super-shell-mcp',
-        version: '2.0.13',
+        version: '2.0.14',
       },
       {
         capabilities: {
@@ -508,10 +523,11 @@ class SuperShellMcpServer {
    * Handle get_platform_info tool
    */
   private async handleGetPlatformInfo() {
-    const { detectPlatform, getDefaultShell, getShellSuggestions, getCommonShellLocations } = await import('./utils/platform-utils.js');
+    const { detectPlatform, getShellSuggestions, getCommonShellLocations } = await import('./utils/platform-utils.js');
     
     const platform = detectPlatform();
     const currentShell = this.commandService.getShell();
+    const shellExecutionEnabled = this.commandService.isShellEnabled();
     const suggestedShells = getShellSuggestions()[platform];
     const commonLocations = getCommonShellLocations();
     
@@ -522,9 +538,12 @@ class SuperShellMcpServer {
           text: JSON.stringify({
             platform,
             currentShell,
+            shellExecutionEnabled,
             suggestedShells,
             commonLocations,
-            helpMessage: `Super Shell MCP is running on ${platform} using ${currentShell}`
+            helpMessage: shellExecutionEnabled
+              ? `Super Shell MCP is running on ${platform} using ${currentShell} with shell parsing enabled.`
+              : `Super Shell MCP is running on ${platform} executing commands without shell parsing.`,
           }, null, 2),
         },
       ],
@@ -685,5 +704,36 @@ class SuperShellMcpServer {
 }
 
 // Create and run the server
-const server = new SuperShellMcpServer();
+const customShellPath = process.env.CUSTOM_SHELL || process.env.SUPER_SHELL_SHELL_PATH;
+const shellModeEnv = process.env.SUPER_SHELL_USE_SHELL || process.env.SUPER_SHELL_ENABLE_SHELL;
+const commandTimeoutEnv = process.env.SUPER_SHELL_COMMAND_TIMEOUT;
+
+const commandExecutionOptions: CommandExecutionOptions = {};
+
+if (customShellPath) {
+  commandExecutionOptions.shell = customShellPath;
+}
+
+if (shellModeEnv !== undefined) {
+  commandExecutionOptions.useShell = /^(1|true|yes|on)$/i.test(shellModeEnv);
+}
+
+if (commandTimeoutEnv !== undefined) {
+  const parsedTimeout = Number(commandTimeoutEnv);
+  if (!Number.isNaN(parsedTimeout) && parsedTimeout > 0) {
+    commandExecutionOptions.defaultTimeout = parsedTimeout;
+  }
+}
+
+const serverOptions: SuperShellMcpServerOptions = {};
+
+if (customShellPath) {
+  serverOptions.shell = customShellPath;
+}
+
+if (Object.keys(commandExecutionOptions).length > 0) {
+  serverOptions.commandExecution = commandExecutionOptions;
+}
+
+const server = new SuperShellMcpServer(serverOptions);
 server.run().catch(console.error);

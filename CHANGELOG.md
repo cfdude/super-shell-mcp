@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.0.14] - 2025-09-17
+
+### Security
+- Disabled shell parsing by default to prevent command injection in `execute_command`
+- Added explicit environment-controlled opt-in for legacy shell mode
+
+### Added
+- New `CommandServiceOptions` API surface (`useShell`, `defaultTimeout`) and `isShellEnabled`
+- Environment variable support for shell mode/timeout configuration
+- Documentation updates covering safe defaults and opt-in shell behaviour
+
+### Fixed
+- Updated tests to cover literal argument handling and shell opt-in paths
+- Manifest now exposes shell parsing toggle to MCP clients
+
 ## [2.0.13] - 2025-03-14
 
 ### Fixed

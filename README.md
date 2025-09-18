@@ -16,6 +16,7 @@ An MCP (Model Context Protocol) server for executing shell commands across multi
   - **Windows**: cmd.exe, PowerShell
   - **macOS**: zsh, bash, sh
   - **Linux**: bash, sh, zsh
+- Shell parsing disabled by default to eliminate command-injection risk, with an explicit opt-in mode for trusted workflows
 - Command whitelisting with security levels:
   - **Safe**: Commands that can be executed without approval
   - **Requires Approval**: Commands that need explicit approval before execution
@@ -153,32 +154,40 @@ If you prefer to use a local installation, add the following to your Roo Code MC
 }
 ```
 
-You can optionally specify a custom shell by adding a shell parameter:
+You can optionally provide a trusted shell and opt into shell parsing by setting environment variables instead of command-line flags:
 
 ```json
 "super-shell": {
   "command": "node",
   "args": [
-    "/path/to/super-shell-mcp/build/index.js",
-    "--shell=/usr/bin/bash"
+    "/path/to/super-shell-mcp/build/index.js"
   ],
+  "env": {
+    "CUSTOM_SHELL": "/usr/bin/bash",
+    "SUPER_SHELL_USE_SHELL": "true"
+  },
   "alwaysAllow": [],
   "disabled": false
 }
 ```
-Windows 11 example
+
+Windows 11 example:
 ```json
 "super-shell": {
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": [
-        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
-        "-y",
-        "super-shell-mcp",
-        "C:\\Users\\username"
-      ],
-      "alwaysAllow": [],
-      "disabled": false
-    }
+  "command": "C:\\Program Files\\nodejs\\node.exe",
+  "args": [
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
+    "-y",
+    "super-shell-mcp",
+    "C:\\Users\\username"
+  ],
+  "env": {
+    "CUSTOM_SHELL": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "SUPER_SHELL_USE_SHELL": "true"
+  },
+  "alwaysAllow": [],
+  "disabled": false
+}
 ```
 
 #### Claude Desktop Configuration
@@ -230,19 +239,15 @@ For Windows users, the configuration file is typically located at `%APPDATA%\Cla
   - zsh: `/usr/bin/zsh`
 
 
-You can optionally specify a custom shell:
+### Shell Execution Modes & Environment Variables
 
-```json
-"super-shell": {
-  "command": "node",
-  "args": [
-    "/path/to/super-shell-mcp/build/index.js",
-    "--shell=C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-  ],
-  "alwaysAllow": false,
-  "disabled": false
-}
-```
+Shell parsing is **disabled by default** for security. Customise behaviour with the following environment variables:
+
+- `SUPER_SHELL_USE_SHELL`: set to `true` (or `1/yes/on`) to enable shell parsing for trusted workflows. Omit or set to `false` to keep the safer default.
+- `CUSTOM_SHELL`: optional path to the shell executable used when shell parsing is enabled.
+- `SUPER_SHELL_COMMAND_TIMEOUT`: optional override (milliseconds) for the default 30s command timeout.
+
+> ⚠️ Enabling shell parsing reintroduces the risk of command injection. Only enable it when you fully trust the command source and payload.
 
 Replace `/path/to/super-shell-mcp` with the actual path where you cloned the repository.
 

@@ -80,12 +80,28 @@ describe('CommandService', () => {
     expect(removedCommand).toBeUndefined();
   });
 
+  test('should disable shell execution by default', () => {
+    expect(commandService.isShellEnabled()).toBe(false);
+  });
+
   test('should execute safe command', async () => {
     // Execute a safe command (echo)
     const result = await commandService.executeCommand('echo', ['test']);
     
     expect(result).toBeDefined();
     expect(result.stdout.trim()).toBe('test');
+  });
+
+  test('should treat special characters literally when shell execution is disabled', async () => {
+    const payload = 'Hello $(whoami)';
+    const result = await commandService.executeCommand('echo', [payload]);
+
+    expect(result.stdout.trim()).toBe(payload);
+  });
+
+  test('should enable shell execution when configured', () => {
+    const shellEnabledService = new CommandService({ useShell: true });
+    expect(shellEnabledService.isShellEnabled()).toBe(true);
   });
 
   test('should reject forbidden command', async () => {

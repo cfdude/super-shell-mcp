@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import { randomUUID } from 'crypto';
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import { getDefaultShell, validateShellPath, getShellConfigurationHelp } from '../utils/platform-utils.js';
+import { getDefaultShell } from '../utils/platform-utils.js';
 import { getPlatformSpecificCommands } from '../utils/command-whitelist-utils.js';
 
 const execFileAsync = promisify(execFile);
@@ -65,11 +65,25 @@ export interface CommandResult {
 }
 
 /**
+ * Command service configuration options
+ */
+export interface CommandServiceOptions {
+  /** Optional shell path to use when shell execution is enabled */
+  shell?: string;
+  /** Whether to execute commands through a shell (default: false) */
+  useShell?: boolean;
+  /** Default timeout for command execution in milliseconds (default: 30000) */
+  defaultTimeout?: number;
+}
+
+/**
  * Service for securely executing shell commands
  */
 export class CommandService extends EventEmitter {
   /** Shell to use for commands */
   private shell: string;
+  /** Whether shell parsing is enabled */
+  private useShell: boolean;
   /** Command whitelist */
   private whitelist: Map<string, CommandWhitelistEntry>;
   /** Pending commands awaiting approval */
@@ -79,15 +93,15 @@ export class CommandService extends EventEmitter {
 
   /**
    * Create a new CommandService
-   * @param shell The shell to use for commands (default: auto-detected based on platform)
-   * @param defaultTimeout Default timeout for command execution in milliseconds (default: 30000)
+   * @param options Command service configuration options
    */
-  constructor(shell?: string, defaultTimeout = 30000) {
+  constructor(options: CommandServiceOptions = {}) {
     super();
-    this.shell = shell || getDefaultShell();
+    this.shell = options.shell || getDefaultShell();
+    this.useShell = options.useShell ?? false;
     this.whitelist = new Map();
     this.pendingCommands = new Map();
-    this.defaultTimeout = defaultTimeout;
+    this.defaultTimeout = options.defaultTimeout ?? 30000;
 
     // Initialize with platform-specific commands
     this.initializeDefaultWhitelist();
@@ -99,6 +113,14 @@ export class CommandService extends EventEmitter {
    */
   public getShell(): string {
     return this.shell;
+  }
+
+  /**
+   * Whether command execution uses a shell for parsing
+   * @returns True if shell execution is enabled
+   */
+  public isShellEnabled(): boolean {
+    return this.useShell;
   }
 
   /**
@@ -247,7 +269,7 @@ export class CommandService extends EventEmitter {
       const timeout = options.timeout || this.defaultTimeout;
       const { stdout, stderr } = await execFileAsync(command, args, {
         timeout,
-        shell: this.shell
+        shell: this.useShell ? this.shell : false
       });
 
       return { stdout, stderr };
@@ -361,7 +383,7 @@ export class CommandService extends EventEmitter {
       const { stdout, stderr } = await execFileAsync(
         pendingCommand.command,
         pendingCommand.args,
-        { shell: this.shell }
+        { shell: this.useShell ? this.shell : false }
       );
 
       // Remove from pending queue
