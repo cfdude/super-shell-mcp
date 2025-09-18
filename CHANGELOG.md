@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.14] - 2025-09-17
+## [2.0.15] - 2025-09-17
 
 ### Security
 - Disabled shell parsing by default to prevent command injection in `execute_command`
@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Updated tests to cover literal argument handling and shell opt-in paths
 - Manifest now exposes shell parsing toggle to MCP clients
+
+## [2.0.14] - 2025-09-17
+
+### Changed
+- Internal release iteration superseded by 2.0.15
 
 ## [2.0.13] - 2025-03-14
 

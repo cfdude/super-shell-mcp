@@ -1,7 +1,7 @@
 {
   "dxt_version": "0.1",
   "name": "super-shell-mcp",
-  "version": "2.0.14",
+  "version": "2.0.15",
   "description": "Execute shell commands across multiple platforms with built-in security controls",
   "long_description": "An MCP server for executing shell commands on Windows, macOS, and Linux with automatic platform detection, command whitelisting, and approval workflows for security.",
   "author": {

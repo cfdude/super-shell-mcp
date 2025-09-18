@@ -1,6 +1,6 @@
 {
   "name": "super-shell-mcp",
-  "version": "2.0.14",
+  "version": "2.0.15",
   "description": "MCP server for executing shell commands across multiple platforms",
   "type": "module",
   "main": "build/index.js",
