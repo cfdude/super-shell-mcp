@@ -585,6 +585,40 @@ The server includes a comprehensive logging system that writes logs to a file fo
    - **Issue**: Need to add custom commands to whitelist
    - **Solution**: Use the `add_to_whitelist` tool to add commands specific to your environment
 
+## Known Issues
+
+### Android Studio Otter 2 Feature Drop Compatibility
+
+**Affected Version**: Android Studio Otter 2 Feature Drop | 2025.2.2 Canary 3 (Build #AI-252.25557.131.2522.14357309)
+
+**Issue**: Android Studio's MCP client implementation incorrectly serializes array parameters as strings when calling the `execute_command` tool. This causes commands with arguments to fail with the error:
+
+```
+Error: Expected array, received string
+```
+
+**Example**:
+```javascript
+// This fails in Android Studio Otter 2
+execute_command(
+  command = "git",
+  args = ["add", "."]  // Sent as string '["add", "."]' instead of array
+)
+```
+
+**Root Cause**: This is a bug in Android Studio's MCP client, not in super-shell-mcp. The server correctly defines `args` as type `array` in its schema, and the issue has been verified to work correctly with:
+- Claude Desktop
+- Official MCP SDK clients
+- Other MCP-compatible tools
+
+**Status**: This is an Android Studio bug. The super-shell-mcp server implements the MCP specification correctly.
+
+**Workaround**: None currently available. Users experiencing this issue should report it to the Android Studio/JetBrains team.
+
+**References**:
+- Issue reported: [#20](https://github.com/cfdude/super-shell-mcp/issues/20)
+- Related documentation: [Android Studio Gemini MCP Integration](https://developer.android.com/studio/gemini/add-mcp-server)
+
 ## License
 
 This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
