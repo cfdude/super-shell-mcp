@@ -1,7 +1,7 @@
 {
   "dxt_version": "0.1",
   "name": "super-shell-mcp",
-  "version": "2.0.13",
+  "version": "2.0.15",
   "description": "Execute shell commands across multiple platforms with built-in security controls",
   "long_description": "An MCP server for executing shell commands on Windows, macOS, and Linux with automatic platform detection, command whitelisting, and approval workflows for security.",
   "author": {
@@ -21,7 +21,8 @@
       "command": "node",
       "args": ["${__dirname}/server/index.js"],
       "env": {
-        "CUSTOM_SHELL": "${user_config.shell_path}"
+        "CUSTOM_SHELL": "${user_config.shell_path}",
+        "SUPER_SHELL_USE_SHELL": "${user_config.enable_shell_mode}"
       }
     }
   },
@@ -49,6 +50,13 @@
       "title": "Custom Shell Path",
       "description": "Optional: Specify a custom shell path (e.g., /bin/zsh, C:\\Windows\\System32\\cmd.exe)",
       "required": false
+    },
+    "enable_shell_mode": {
+      "type": "boolean",
+      "title": "Enable Shell Parsing (unsafe)",
+      "description": "Set to true only if you fully trust the commands being executed.",
+      "required": false,
+      "default": false
     }
   }
 }
