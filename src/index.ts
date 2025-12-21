@@ -36,6 +36,7 @@ interface CommandExecutionOptions {
   shell?: string;
   useShell?: boolean;
   defaultTimeout?: number;
+  whitelistStoragePath?: string;
 }
 
 interface SuperShellMcpServerOptions {
@@ -54,6 +55,7 @@ class SuperShellMcpServer {
       shell: options?.commandExecution?.shell ?? options?.shell,
       useShell: options?.commandExecution?.useShell,
       defaultTimeout: options?.commandExecution?.defaultTimeout,
+      whitelistStoragePath: options?.commandExecution?.whitelistStoragePath,
     });
     this.pendingApprovals = new Map();
 
@@ -703,6 +705,29 @@ class SuperShellMcpServer {
   }
 }
 
+/**
+ * Parse command line arguments
+ * @returns Parsed options
+ */
+function parseCliArguments(): { whitelistPath?: string } {
+  const args = process.argv.slice(2);
+  const options: { whitelistPath?: string } = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if ((arg === '--whitelist-path' || arg === '-w') && i + 1 < args.length) {
+      options.whitelistPath = args[i + 1];
+      i++; // Skip the next argument as it's the value
+    }
+  }
+
+  return options;
+}
+
+// Parse CLI arguments
+const cliOptions = parseCliArguments();
+
 // Create and run the server
 const customShellPath = process.env.CUSTOM_SHELL || process.env.SUPER_SHELL_SHELL_PATH;
 const shellModeEnv = process.env.SUPER_SHELL_USE_SHELL || process.env.SUPER_SHELL_ENABLE_SHELL;
@@ -723,6 +748,11 @@ if (commandTimeoutEnv !== undefined) {
   if (!Number.isNaN(parsedTimeout) && parsedTimeout > 0) {
     commandExecutionOptions.defaultTimeout = parsedTimeout;
   }
+}
+
+// Add whitelist storage path if provided via CLI
+if (cliOptions.whitelistPath) {
+  commandExecutionOptions.whitelistStoragePath = cliOptions.whitelistPath;
 }
 
 const serverOptions: SuperShellMcpServerOptions = {};

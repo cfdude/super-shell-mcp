@@ -3,7 +3,8 @@ import { promisify } from 'util';
 import { randomUUID } from 'crypto';
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import { getDefaultShell } from '../utils/platform-utils.js';
+import * as fs from 'fs';
+import { getDefaultShell, getWhitelistStoragePath, ensureAppDataDirectory } from '../utils/platform-utils.js';
 import { getPlatformSpecificCommands } from '../utils/command-whitelist-utils.js';
 
 const execFileAsync = promisify(execFile);
@@ -74,6 +75,8 @@ export interface CommandServiceOptions {
   useShell?: boolean;
   /** Default timeout for command execution in milliseconds (default: 30000) */
   defaultTimeout?: number;
+  /** Optional custom path for whitelist storage file */
+  whitelistStoragePath?: string;
 }
 
 /**
@@ -90,6 +93,8 @@ export class CommandService extends EventEmitter {
   private pendingCommands: Map<string, PendingCommand>;
   /** Default timeout for command execution in milliseconds */
   private defaultTimeout: number;
+  /** Custom path for whitelist storage file */
+  private whitelistStoragePath?: string;
 
   /**
    * Create a new CommandService
@@ -102,6 +107,7 @@ export class CommandService extends EventEmitter {
     this.whitelist = new Map();
     this.pendingCommands = new Map();
     this.defaultTimeout = options.defaultTimeout ?? 30000;
+    this.whitelistStoragePath = options.whitelistStoragePath;
 
     // Initialize with platform-specific commands
     this.initializeDefaultWhitelist();
@@ -127,13 +133,121 @@ export class CommandService extends EventEmitter {
    * Initialize the default command whitelist based on the current platform
    */
   private initializeDefaultWhitelist(): void {
-    // Get platform-specific commands
-    const platformCommands = getPlatformSpecificCommands();
+    // Try to load from file first
+    const loaded = this.loadWhitelistFromFile();
     
-    // Add all commands to the whitelist
-    platformCommands.forEach(entry => {
-      this.whitelist.set(entry.command, entry);
-    });
+    if (!loaded) {
+      // If no saved whitelist exists, use platform defaults
+      const platformCommands = getPlatformSpecificCommands();
+      
+      // Add all commands to the whitelist
+      platformCommands.forEach(entry => {
+        this.whitelist.set(entry.command, entry);
+      });
+      
+      // Save the initial whitelist
+      this.saveWhitelistToFile();
+    }
+  }
+
+  /**
+   * Load whitelist from persistent storage
+   * @returns True if whitelist was loaded successfully, false otherwise
+   */
+  private loadWhitelistFromFile(): boolean {
+    try {
+      const whitelistPath = getWhitelistStoragePath(this.whitelistStoragePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(whitelistPath)) {
+        return false;
+      }
+      
+      // Read and parse the file
+      const fileContent = fs.readFileSync(whitelistPath, 'utf-8');
+      const data = JSON.parse(fileContent);
+      
+      // Validate the data structure
+      if (!data || !Array.isArray(data.commands)) {
+        return false;
+      }
+      
+      // Clear existing whitelist
+      this.whitelist.clear();
+      
+      // Load commands into the whitelist
+      data.commands.forEach((entry: CommandWhitelistEntry) => {
+        // Reconstruct RegExp patterns from serialized format
+        if (entry.allowedArgs) {
+          entry.allowedArgs = entry.allowedArgs.map((arg: any) => {
+            if (typeof arg === 'object' && arg.pattern && arg.flags !== undefined) {
+              return new RegExp(arg.pattern, arg.flags);
+            }
+            return arg;
+          });
+        }
+        this.whitelist.set(entry.command, entry);
+      });
+      
+      return true;
+    } catch (error) {
+      // If there's any error loading, return false to use defaults
+      return false;
+    }
+  }
+
+  /**
+   * Save whitelist to persistent storage
+   * @returns True if whitelist was saved successfully, false otherwise
+   */
+  private saveWhitelistToFile(): boolean {
+    try {
+      const whitelistPath = getWhitelistStoragePath(this.whitelistStoragePath);
+      
+      // Ensure the directory exists (for custom paths, create parent directory if needed)
+      if (this.whitelistStoragePath) {
+        const dir = path.dirname(whitelistPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      } else {
+        // For default path, use the existing ensureAppDataDirectory
+        if (!ensureAppDataDirectory()) {
+          return false;
+        }
+      }
+      
+      // Convert Map to array for serialization
+      const commands = Array.from(this.whitelist.values()).map(entry => {
+        // Handle RegExp serialization
+        const serializedEntry: any = { ...entry };
+        if (entry.allowedArgs) {
+          serializedEntry.allowedArgs = entry.allowedArgs.map(arg => {
+            if (arg instanceof RegExp) {
+              return {
+                pattern: arg.source,
+                flags: arg.flags
+              };
+            }
+            return arg;
+          });
+        }
+        return serializedEntry;
+      });
+      
+      const data = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        commands
+      };
+      
+      // Write to file
+      fs.writeFileSync(whitelistPath, JSON.stringify(data, null, 2), 'utf-8');
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
@@ -142,6 +256,7 @@ export class CommandService extends EventEmitter {
    */
   public addToWhitelist(entry: CommandWhitelistEntry): void {
     this.whitelist.set(entry.command, entry);
+    this.saveWhitelistToFile();
   }
 
   /**
@@ -150,6 +265,7 @@ export class CommandService extends EventEmitter {
    */
   public removeFromWhitelist(command: string): void {
     this.whitelist.delete(command);
+    this.saveWhitelistToFile();
   }
 
   /**
@@ -162,6 +278,7 @@ export class CommandService extends EventEmitter {
     if (entry) {
       entry.securityLevel = securityLevel;
       this.whitelist.set(command, entry);
+      this.saveWhitelistToFile();
     }
   }
 

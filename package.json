@@ -1,6 +1,6 @@
 {
   "name": "super-shell-mcp",
-  "version": "2.0.15",
+  "version": "2.1.0",
   "description": "MCP server for executing shell commands across multiple platforms",
   "type": "module",
   "main": "build/index.js",
@@ -9,13 +9,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cfdude/super-shell-mcp.git"
+    "url": "git+https://github.com/kshin5/super-shell-mcp.git"
   },
   "files": [
     "build"
   ],
   "scripts": {
-    "build": "tsc && chmod +x build/index.js",
+    "build": "tsc",
     "prepare": "npm run build",
     "start": "node build/index.js",
     "dev": "ts-node --esm src/index.ts",

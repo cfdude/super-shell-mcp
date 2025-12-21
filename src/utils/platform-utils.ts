@@ -120,3 +120,54 @@ export function getShellConfigurationHelp(): string {
   
   return message;
 }
+
+/**
+ * Get the application data directory for the current platform
+ * @returns Path to the application data directory
+ */
+export function getAppDataDirectory(): string {
+  const platform = detectPlatform();
+  const appName = 'super-shell-mcp';
+  
+  switch (platform) {
+    case PlatformType.WINDOWS:
+      // Use APPDATA on Windows (e.g., C:\Users\username\AppData\Roaming)
+      return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), appName);
+    case PlatformType.MACOS:
+      // Use ~/Library/Application Support on macOS
+      return path.join(os.homedir(), 'Library', 'Application Support', appName);
+    case PlatformType.LINUX:
+    default:
+      // Use ~/.config on Linux and other Unix-like systems
+      return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), appName);
+  }
+}
+
+/**
+ * Get the path to the whitelist storage file
+ * @param customPath Optional custom path to use instead of default
+ * @returns Path to the whitelist JSON file
+ */
+export function getWhitelistStoragePath(customPath?: string): string {
+  if (customPath) {
+    return path.resolve(customPath);
+  }
+  const dataDir = getAppDataDirectory();
+  return path.join(dataDir, 'whitelist.json');
+}
+
+/**
+ * Ensure the application data directory exists
+ * @returns True if directory exists or was created successfully
+ */
+export function ensureAppDataDirectory(): boolean {
+  try {
+    const dataDir = getAppDataDirectory();
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
