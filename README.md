@@ -249,6 +249,62 @@ Shell parsing is **disabled by default** for security. Customise behaviour with 
 
 > ⚠️ Enabling shell parsing reintroduces the risk of command injection. Only enable it when you fully trust the command source and payload.
 
+### Startup Whitelist Configuration
+
+By default the whitelist resets to platform defaults on every restart. Use the options below to pre-populate it persistently — without modifying source code — directly from your MCP client configuration.
+
+#### `--whitelist` flag (inline, repeatable)
+
+Pass one or more `--whitelist` flags when starting the server. The format is `command:level` or `command:level:description`:
+
+```json
+"super-shell": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "super-shell-mcp",
+    "--whitelist", "git:safe:Git version control",
+    "--whitelist", "npm:requires_approval:Node package manager",
+    "--whitelist", "docker:forbidden"
+  ]
+}
+```
+
+Valid security levels: `safe`, `requires_approval`, `forbidden`.
+
+#### `--whitelist-config` flag (JSON file)
+
+Point the server at a JSON config file for larger or shared whitelists:
+
+```json
+"super-shell": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "super-shell-mcp",
+    "--whitelist-config", "/path/to/whitelist.json"
+  ]
+}
+```
+
+The config file format:
+
+```json
+{
+  "whitelist": [
+    { "command": "git", "securityLevel": "safe", "description": "Git version control" },
+    { "command": "npm", "securityLevel": "requires_approval", "description": "Node package manager" },
+    { "command": "docker", "securityLevel": "forbidden" }
+  ]
+}
+```
+
+Both flags can be combined. `--whitelist` entries are applied first, then the config file is loaded on top.
+
+#### Persistent runtime changes
+
+When `--whitelist-config` is provided, any runtime calls to `add_to_whitelist`, `update_security_level`, or `remove_from_whitelist` are automatically written back to the config file. Changes survive server restarts without any extra steps.
+
 Replace `/path/to/super-shell-mcp` with the actual path where you cloned the repository.
 
 > **Note**:
@@ -425,7 +481,21 @@ The server includes platform-specific command whitelists that are automatically 
 
 ## Extending the Whitelist
 
-You can extend the whitelist by using the `add_to_whitelist` tool. For example:
+There are three ways to add commands to the whitelist:
+
+**1. At startup via CLI args** — persists across restarts when using a config file (see [Startup Whitelist Configuration](#startup-whitelist-configuration)):
+
+```json
+"args": ["--whitelist", "git:safe:Git version control"]
+```
+
+**2. At startup via JSON config file** — recommended for teams or complex setups:
+
+```json
+"args": ["--whitelist-config", "/path/to/whitelist.json"]
+```
+
+**3. At runtime via the `add_to_whitelist` tool** — session-only unless `--whitelist-config` is set:
 
 ```json
 {

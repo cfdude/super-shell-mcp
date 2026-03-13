@@ -306,10 +306,10 @@ export class CommandService extends EventEmitter {
       };
 
       this.pendingCommands.set(id, pendingCommand);
-      
+
       // Emit event for pending command
       this.emit('command:pending', pendingCommand);
-      
+
       // Set a timeout to check if the command is still pending after a while
       // This helps detect if the UI approval didn't properly trigger the approveCommand method
       setTimeout(() => {
@@ -321,7 +321,7 @@ export class CommandService extends EventEmitter {
             message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
           });
         }
-      }, 5000); // 5 second timeout to detect UI approval issues
+      }, 5000).unref(); // 5 second timeout to detect UI approval issues
     });
   }
 
@@ -349,10 +349,10 @@ export class CommandService extends EventEmitter {
     };
 
     this.pendingCommands.set(id, pendingCommand);
-    
+
     // Emit event for pending command
     this.emit('command:pending', pendingCommand);
-    
+
     // Set a timeout to check if the command is still pending after a while
     setTimeout(() => {
       // If the command is still pending after the timeout
@@ -363,8 +363,8 @@ export class CommandService extends EventEmitter {
           message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
         });
       }
-    }, 5000); // 5 second timeout to detect UI approval issues
-    
+    }, 5000).unref(); // 5 second timeout to detect UI approval issues
+
     return id;
   }
 

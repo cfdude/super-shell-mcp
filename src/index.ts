@@ -17,6 +17,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { CommandService, CommandSecurityLevel } from './services/command-service.js';
 import { getLogger, Logger } from './utils/logger.js';
+import { parseWhitelistArgs, loadWhitelistConfig } from './utils/cli-utils.js';
 
 // In ESM, __dirname is not available directly, so we create it
 const __filename = fileURLToPath(import.meta.url);
@@ -41,12 +42,15 @@ interface CommandExecutionOptions {
 interface SuperShellMcpServerOptions {
   shell?: string;
   commandExecution?: CommandExecutionOptions;
+  initialWhitelist?: Array<{ command: string; securityLevel: string; description?: string }>;
+  whitelistConfigPath?: string;
 }
 
 class SuperShellMcpServer {
   private server: Server;
   private commandService: CommandService;
   private pendingApprovals: Map<string, { command: string; args: string[] }>;
+  private whitelistConfigPath?: string;
 
   constructor(options?: SuperShellMcpServerOptions) {
     // Initialize the command service with auto-detected or specified shell
@@ -56,6 +60,24 @@ class SuperShellMcpServer {
       defaultTimeout: options?.commandExecution?.defaultTimeout,
     });
     this.pendingApprovals = new Map();
+    this.whitelistConfigPath = options?.whitelistConfigPath;
+
+    // Apply any initial whitelist entries from CLI args or config file
+    if (options?.initialWhitelist) {
+      for (const entry of options.initialWhitelist) {
+        const securityLevelEnum = entry.securityLevel === 'safe'
+          ? CommandSecurityLevel.SAFE
+          : entry.securityLevel === 'requires_approval'
+            ? CommandSecurityLevel.REQUIRES_APPROVAL
+            : CommandSecurityLevel.FORBIDDEN;
+        this.commandService.addToWhitelist({
+          command: entry.command,
+          securityLevel: securityLevelEnum,
+          description: entry.description,
+        });
+      }
+      logger.info(`Applied ${options.initialWhitelist.length} initial whitelist entries`);
+    }
 
     // Initialize the MCP server
     this.server = new Server(
@@ -89,6 +111,24 @@ class SuperShellMcpServer {
       logger.close();
       process.exit(0);
     });
+  }
+
+  /**
+   * Persist the current whitelist to the config file (if one was specified at startup)
+   */
+  private persistWhitelistConfig(): void {
+    if (!this.whitelistConfigPath) return;
+    try {
+      const whitelist = this.commandService.getWhitelist().map(entry => ({
+        command: entry.command,
+        securityLevel: entry.securityLevel,
+        ...(entry.description ? { description: entry.description } : {}),
+      }));
+      fs.writeFileSync(this.whitelistConfigPath, JSON.stringify({ whitelist }, null, 2), 'utf-8');
+      logger.info(`Whitelist persisted to ${this.whitelistConfigPath}`);
+    } catch (error) {
+      logger.error(`Failed to persist whitelist config: ${error instanceof Error ? error.message : error}`);
+    }
   }
 
   /**
@@ -457,6 +497,8 @@ class SuperShellMcpServer {
       description,
     });
 
+    this.persistWhitelistConfig();
+
     return {
       content: [
         {
@@ -487,6 +529,8 @@ class SuperShellMcpServer {
 
     this.commandService.updateSecurityLevel(command, securityLevelEnum);
 
+    this.persistWhitelistConfig();
+
     return {
       content: [
         {
@@ -508,6 +552,8 @@ class SuperShellMcpServer {
     const { command } = schema.parse(args);
 
     this.commandService.removeFromWhitelist(command);
+
+    this.persistWhitelistConfig();
 
     return {
       content: [
@@ -725,6 +771,20 @@ if (commandTimeoutEnv !== undefined) {
   }
 }
 
+// Parse CLI args for whitelist configuration
+// Supports:
+//   --whitelist "git:safe"
+//   --whitelist "git:safe:Git version control"
+//   --whitelist-config /path/to/whitelist.json
+const { initialWhitelist: argWhitelist, whitelistConfigPath } = parseWhitelistArgs(process.argv.slice(2));
+const initialWhitelist = [...argWhitelist];
+
+// Load whitelist from JSON config file if specified
+if (whitelistConfigPath) {
+  const configEntries = loadWhitelistConfig(whitelistConfigPath);
+  initialWhitelist.push(...configEntries);
+}
+
 const serverOptions: SuperShellMcpServerOptions = {};
 
 if (customShellPath) {
@@ -733,6 +793,14 @@ if (customShellPath) {
 
 if (Object.keys(commandExecutionOptions).length > 0) {
   serverOptions.commandExecution = commandExecutionOptions;
+}
+
+if (initialWhitelist.length > 0) {
+  serverOptions.initialWhitelist = initialWhitelist;
+}
+
+if (whitelistConfigPath) {
+  serverOptions.whitelistConfigPath = whitelistConfigPath;
 }
 
 const server = new SuperShellMcpServer(serverOptions);

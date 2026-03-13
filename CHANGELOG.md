@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `--whitelist` CLI flag (repeatable) to pre-populate the whitelist at startup without modifying source code. Format: `command:safe|requires_approval|forbidden[:description]`. Useful for static MCP client configurations where `add_to_whitelist` cannot be called before the first command.
+- `--whitelist-config /path/to/whitelist.json` CLI flag to load a JSON whitelist config file at startup. Supports the same entries as the inline flag and can be combined with `--whitelist`.
+- Automatic persistence: when `--whitelist-config` is provided, runtime calls to `add_to_whitelist`, `update_security_level`, and `remove_from_whitelist` write the updated whitelist back to the config file, so changes survive server restarts.
+
+### Fixed
+- Timer leak in test suite: `setTimeout` calls for approval timeout detection now call `.unref()` so Jest worker processes exit cleanly without being force-killed.
+
 ## [2.0.15] - 2025-09-17
 
 ### Security
