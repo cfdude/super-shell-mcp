@@ -10,6 +10,8 @@
       "mcp__git__git_add",
       "mcp__git__git_commit"
     ],
-    "deny": []
+    "deny": [
+      "mcp__claude-code__Bash"
+    ]
   }
 }
