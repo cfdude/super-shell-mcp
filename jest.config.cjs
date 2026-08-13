@@ -10,6 +10,7 @@ module.exports = {
   setupFiles: ['./jest.setup.cjs'],
   moduleNameMapper: {
     '^../build/services/command-service.js$': '<rootDir>/jest.setup.cjs',
-    '^../build/utils/platform-utils.js$': '<rootDir>/jest.setup.cjs'
+    '^../build/utils/platform-utils.js$': '<rootDir>/jest.setup.cjs',
+    '^../build/utils/cli-utils.js$': '<rootDir>/jest.setup.cjs'
   }
 };

@@ -265,7 +265,7 @@ class CommandService extends EventEmitter {
       
       this.pendingCommands.set(id, pendingCommand);
       this.emit('command:pending', pendingCommand);
-      
+
       setTimeout(() => {
         if (this.pendingCommands.has(id)) {
           this.emit('command:approval_timeout', {
@@ -273,7 +273,7 @@ class CommandService extends EventEmitter {
             message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
           });
         }
-      }, 5000);
+      }, 5000).unref();
     });
   }
 
@@ -291,7 +291,7 @@ class CommandService extends EventEmitter {
     
     this.pendingCommands.set(id, pendingCommand);
     this.emit('command:pending', pendingCommand);
-    
+
     setTimeout(() => {
       if (this.pendingCommands.has(id)) {
         this.emit('command:approval_timeout', {
@@ -299,8 +299,8 @@ class CommandService extends EventEmitter {
           message: 'Command approval timed out. If you approved this command in the UI, please use get_pending_commands and approve_command to complete the process.'
         });
       }
-    }, 5000);
-    
+    }, 5000).unref();
+
     return id;
   }
 
@@ -350,6 +350,61 @@ class CommandService extends EventEmitter {
   }
 }
 
+// cli-utils: parseWhitelistArgs and loadWhitelistConfig (CJS implementations for Jest)
+const VALID_SECURITY_LEVELS = ['safe', 'requires_approval', 'forbidden'];
+
+function parseWhitelistArgs(argv) {
+  const initialWhitelist = [];
+  let whitelistConfigPath;
+
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--whitelist' && argv[i + 1]) {
+      const raw = argv[++i];
+      const parts = raw.split(':');
+      if (parts.length >= 2) {
+        const [command, securityLevel, ...descParts] = parts;
+        if (command && VALID_SECURITY_LEVELS.includes(securityLevel)) {
+          initialWhitelist.push({
+            command,
+            securityLevel,
+            description: descParts.length > 0 ? descParts.join(':') : undefined,
+          });
+        }
+      }
+    } else if (argv[i] === '--whitelist-config' && argv[i + 1]) {
+      whitelistConfigPath = argv[++i];
+    }
+  }
+
+  return { initialWhitelist, whitelistConfigPath };
+}
+
+function loadWhitelistConfig(configPath) {
+  try {
+    const raw = fs.readFileSync(configPath, 'utf-8');
+    const config = JSON.parse(raw);
+    const entries = [];
+
+    if (!Array.isArray(config.whitelist)) {
+      return [];
+    }
+
+    for (const entry of config.whitelist) {
+      if (typeof entry.command === 'string' && VALID_SECURITY_LEVELS.includes(entry.securityLevel)) {
+        entries.push({
+          command: entry.command,
+          securityLevel: entry.securityLevel,
+          description: typeof entry.description === 'string' ? entry.description : undefined,
+        });
+      }
+    }
+
+    return entries;
+  } catch (error) {
+    return [];
+  }
+}
+
 // Export the mocked modules
 module.exports = {
   CommandService,
@@ -360,5 +415,7 @@ module.exports = {
   validateShellPath,
   getShellSuggestions,
   getCommonShellLocations,
-  getShellConfigurationHelp
+  getShellConfigurationHelp,
+  parseWhitelistArgs,
+  loadWhitelistConfig,
 };
