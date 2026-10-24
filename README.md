@@ -2,7 +2,7 @@
 
 # Super Shell MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@cfdude/super-shell-mcp)](https://smithery.ai/package/@cfdude/super-shell-mcp)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.cfdude/super-shell-mcp)](https://lightnow.ai/servers/io.github.cfdude/super-shell-mcp)
 
 An MCP (Model Context Protocol) server for executing shell commands across multiple platforms (Windows, macOS, Linux). This server provides a secure way to execute shell commands with built-in whitelisting and approval mechanisms.
 
